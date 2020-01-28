@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<style>
+	* {margin:0; padding:0;}
+	canvas {border:1px solid red;}
+	</style>
+	<!-- Load the Paper.js library -->
+	<script type="text/javascript" src="paper.js"></script>
+	<script src="buzz.js"></script>
+
+
+
+	<!-- Define inlined PaperScript associate it with myCanvas -->
+	<script type="text/paperscript" canvas="myCanvas">
+
+var shotSound = new buzz.sound( "shot", {
+		  formats: ["ogg","mp3"]
+		});
+
+	var caixa = new Path.Rectangle(new Point(100,100),new Size(20,60));
+	caixa.strokeColor='blue';
+	caixa.strokeWidth=2;
+	caixa.fillColor = 'red';
+
+	caixa.inercia = new Point(0,0);
+	caixa.rotation = 0;
+
+	//canhao = [0,10];
+	//canhao.length = 10;
+	canhao = {
+		length: 20,
+		path: new Path.Line([0,0],[0,0]),
+		vec: function(){
+			return this.path.segments[1].point - this.path.segments[0].point;
+		},
+		vecTo: function(point){
+			vec = point - this.path.segments[0].point;
+			vec.length = this.length;
+			return vec;
+		},
+		setPosition: function(newposition){
+			this.position = newposition;
+			this.path.segments[0].point = newposition;
+		},
+		setTarget: function(target){
+			this.path.segments[1].point = this.path.segments[0].point + this.vecTo(target);
+		},
+	};
+
+	canhao.path.strokeColor = 'green';
+	canhao.path.strokeCap = 'round';
+	canhao.path.strokeWidth = 5;
+
+	running= true;
+
+	var x=0;
+	var gravidade = new Point(0,10);
+	caixa.angulo = 90 ;
+
+	var tiros = [];
+
+	var mousePos = [0,0]
+
+
+	function onMouseMove(event){
+		mousePos = event.point;
+	}
+
+
+	function onMouseDown(event){
+		tiro = {
+			position: canhao.position,
+			power: 1000,
+			size: 3,
+			path: new Path.Circle(canhao.position,3),
+			inercia: canhao.vecTo(event.point) + caixa.inercia,
+			move: function(delta){
+				this.path.remove();
+				this.position = this.position + this.inercia;
+				this.power -= delta;
+				this.size = 3 * (this.power/1000);
+				this.path = new Path.Circle(this.position,this.size);
+				this.path.fillColor = 'black';
+			}
+		}
+		caixa.inercia += -tiro.inercia*0.05;
+		tiros.push(tiro);
+
+		var shotSound = new buzz.sound( "shot", {
+		  formats: ["ogg","mp3"]
+		});
+		shotSound.play();
+
+	}
+
+	function onFrame(event){
+		if(!running) return;
+
+		if(Key.isDown('d')) {
+			caixa.rotation += 0.3;
+		} else if(Key.isDown('a')) {
+			caixa.rotation -= 0.3;
+		}
+
+		if(Key.isDown('w')) {
+			fy = -(20*event.delta) * Math.sin(caixa.angulo * Math.PI / 180)
+			fx = (20*event.delta) * Math.cos(caixa.angulo * Math.PI / 180)
+			caixa.inercia += [fx,fy];
+		}
+
+		caixa.rotation = caixa.rotation*0.95;
+		caixa.angulo -= caixa.rotation;
+
+		caixa.inercia += gravidade*event.delta;
+		caixa.inercia *= 0.99;
+
+		caixa.rotate(caixa.rotation);
+		caixa.position += caixa.inercia*(60*event.delta);
+
+
+		//move o canhao
+		canhao.setPosition(caixa.position);
+		canhao.setTarget(mousePos);
+
+		// move as balas
+		for(i in tiros){
+			tiros[i].move(event.delta*1000);
+			if(tiros[i].power<=0) { tiros[i].path.remove(); tiros.splice(i, 1); }
+		}
+
+
+		//colisao chao e teto
+		if(caixa.position.y<=0) {
+			caixa.inercia.y = 0;
+			caixa.position.y = 0;
+		}
+		if(caixa.position.y>=view.size.height - caixa.bounds.height/2 ) {
+			caixa.inercia.y = 0;
+			caixa.position.y = view.size.height - caixa.bounds.height/2;
+			caixa.rotation = 0;
+			caixa.rotate(caixa.angulo-90);
+			caixa.angulo = 90;
+			caixa.inercia *= 0.9;
+		}
+
+
+		//colisao paredes
+		if(caixa.position.x<=0) { caixa.inercia.x = 0; caixa.position.x = 0; }
+		if(caixa.position.x>=view.size.width) { caixa.inercia.x = 0; caixa.position.x = view.size.width; }
+
+
+	}
+
+	</script>
+</head>
+<body>
+
+	<script>
+</script>
+	<canvas id="myCanvas"   width="800" height="600"></canvas>
+	<br />
+	Instructions:<br>
+	<strong>w a s d</strong> keys to control the player<br>
+	mouse click to shoot
+</body>
+</html>
