@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<style>
+	* {margin:0; padding:0; box-sizing: border-box;}
+	*:before, *:after {box-sizing: border-box;}
+    html,body { height: 100%; }
+    /* body { height: 100vh; } */
+	.wrapper { 
+		background:#f99115;
+		border:5px solid red;
+        height: 100%;
+	}
+
+    /* prevent scroll on ios */
+    body {
+        overflow: hidden;
+    }
+    
+	</style>
+
+
+</head>
+<body>
+    <div class="wrapper">
+        <h1>hello</h1>
+        <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Laboriosam, in? Quae at doloremque optio, eligendi, neque totam facere repellat ex fugiat impedit molestiae. Nostrum architecto nemo quod? Placeat, pariatur mollitia?
+    </div>
+
+    <script>
+        //prevent scroll on ios
+        document.ontouchmove = function(event){
+            event.preventDefault();
+        }
+
+    </script>
+</body>
+</html>
